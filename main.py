@@ -13,15 +13,20 @@ st.set_page_config(page_title="EOQ Calculator", layout="centered")
 st.title("Aplikasi Perhitungan EOQ (Economic Order Quantity)")
 st.write("""
 ### Deskripsi:
-Simulasi ini digunakan untuk menghitung jumlah pemesanan optimal berdasarkan permintaan tahunan,
-biaya pemesanan, dan biaya penyimpanan per unit.
+Aplikasi ini menghitung **jumlah pemesanan optimal (EOQ)**, total biaya pemesanan, biaya penyimpanan, dan total biaya persediaan secara lengkap.
 
 ### Rumus EOQ:
 \[ EOQ = \sqrt{\frac{2DS}{H}} \]
 
+**Dimana:**
+- D = Permintaan Tahunan (unit)
+- S = Biaya Pemesanan per Order (Rp)
+- H = Biaya Penyimpanan per Unit per Tahun (Rp)
+
 ### Fitur:
 - **Input**: Permintaan tahunan, biaya pemesanan, dan biaya penyimpanan
-- **Output**: EOQ, total biaya persediaan, jumlah pemesanan per tahun
+- **Output**: EOQ, total biaya pemesanan per tahun, total biaya penyimpanan per tahun, total biaya persediaan, jumlah pemesanan per tahun
+- **Grafik**: Menampilkan titik koordinat dan keterangan EOQ
 - **Konsep**: Inventory Model – EOQ formula
 """)
 
@@ -37,37 +42,81 @@ def hitung_eoq(D, S, H):
 
 EOQ = hitung_eoq(D, S, H)
 jumlah_order_per_tahun = D / EOQ
-biaya_total_persediaan = EOQ / 2 * H + (D / EOQ) * S
+
+# Hitung rincian biaya
+biaya_pemesanan_total = jumlah_order_per_tahun * S
+biaya_penyimpanan_total = (EOQ / 2) * H
+biaya_total_persediaan = biaya_pemesanan_total + biaya_penyimpanan_total
 
 # Output hasil
 st.subheader("Hasil Perhitungan EOQ")
-st.write(f"**Jumlah Pemesanan Optimal (EOQ)**: {EOQ:.2f} unit")
-st.write(f"**Jumlah Pemesanan per Tahun**: {jumlah_order_per_tahun:.2f} kali")
-st.write(f"**Total Biaya Persediaan**: Rp {biaya_total_persediaan:,.2f}")
+st.write(f"📦 **Jumlah Pemesanan Optimal (EOQ)**: {EOQ:.2f} unit")
+st.write(f"🔁 **Jumlah Pemesanan per Tahun**: {jumlah_order_per_tahun:.2f} kali")
 
-# Grafik EOQ
+# Rincian biaya
+st.subheader("Rincian Biaya Persediaan per Tahun")
+st.write(f"📝 **Total Biaya Pemesanan**: Rp {biaya_pemesanan_total:,.2f}")
+st.write(f"🏬 **Total Biaya Penyimpanan**: Rp {biaya_penyimpanan_total:,.2f}")
+st.write(f"💰 **Total Biaya Persediaan (Pemesanan + Penyimpanan)**: Rp {biaya_total_persediaan:,.2f}")
+
+# Grafik EOQ dengan titik koordinat dan keterangan EOQ
 st.subheader("Grafik Biaya Total vs Kuantitas Order")
 order_qty_range = np.arange(1, D + 1)
 holding_cost = (order_qty_range / 2) * H
 ordering_cost = (D / order_qty_range) * S
 total_cost = holding_cost + ordering_cost
 
-fig, ax = plt.subplots(figsize=(8, 4))
+fig, ax = plt.subplots(figsize=(10, 5))
+
+# Plot Total Cost dengan titik koordinat
 ax.plot(order_qty_range, total_cost, label='Total Biaya', color='blue')
+ax.scatter(order_qty_range, total_cost, color='blue', s=10)
+
+# Plot Holding Cost dengan titik koordinat
 ax.plot(order_qty_range, holding_cost, '--', label='Biaya Penyimpanan', color='green')
+ax.scatter(order_qty_range, holding_cost, color='green', s=10)
+
+# Plot Ordering Cost dengan titik koordinat
 ax.plot(order_qty_range, ordering_cost, '--', label='Biaya Pemesanan', color='red')
+ax.scatter(order_qty_range, ordering_cost, color='red', s=10)
+
+# Garis EOQ dan titik EOQ spesifik
 ax.axvline(EOQ, color='orange', linestyle=':', label=f'EOQ ≈ {EOQ:.0f}')
+ax.scatter(EOQ, biaya_total_persediaan, color='orange', s=50, marker='X', label='Titik EOQ Optimal')
+
+# Penambahan anotasi pada EOQ
+ax.annotate(f'EOQ = {EOQ:.0f} unit\nTotal Cost = Rp {biaya_total_persediaan:,.0f}',
+            xy=(EOQ, biaya_total_persediaan),
+            xytext=(EOQ + D*0.05, biaya_total_persediaan),
+            arrowprops=dict(facecolor='orange', shrink=0.05),
+            fontsize=9, color='black')
+
+# Label dan grid
 ax.set_xlabel('Jumlah Order per Kali Pesan (unit)')
 ax.set_ylabel('Biaya (Rp)')
 ax.set_title('Analisis Biaya Persediaan terhadap Kuantitas Order')
 ax.legend()
-ax.grid(True)
+ax.grid(True, linestyle='--', alpha=0.7)
 
 st.pyplot(fig)
 
 # Interpretasi hasil
 st.subheader("Interpretasi")
-st.markdown(f"Dengan EOQ sebesar **{EOQ:.2f} unit**, perusahaan sebaiknya memesan barang sebanyak itu setiap kali pemesanan dilakukan untuk meminimalkan biaya total persediaan. Dalam satu tahun, diperkirakan akan ada sekitar **{jumlah_order_per_tahun:.2f} kali pemesanan**.")
+st.markdown(f"""
+Dengan hasil perhitungan:
+- **EOQ = {EOQ:.2f} unit**, artinya perusahaan sebaiknya memesan barang sebanyak ini setiap kali melakukan pemesanan untuk **meminimalkan total biaya persediaan**.
+- **Jumlah pemesanan per tahun = {jumlah_order_per_tahun:.2f} kali**, yaitu frekuensi pembelian.
+- **Total biaya pemesanan = Rp {biaya_pemesanan_total:,.2f}**
+- **Total biaya penyimpanan = Rp {biaya_penyimpanan_total:,.2f}**
+- **Total biaya persediaan = Rp {biaya_total_persediaan:,.2f}**
+
+📊 **Grafik di atas menunjukkan:**
+- Titik **EOQ (marker X orange)** adalah jumlah order dengan total biaya terendah.
+- **Kurva biru**: Total biaya persediaan (gabungan biaya pemesanan dan penyimpanan).
+- **Kurva merah**: Biaya pemesanan (menurun saat kuantitas order naik).
+- **Kurva hijau**: Biaya penyimpanan (meningkat saat kuantitas order naik).
+- Garis vertikal orange menunjukkan posisi EOQ optimal.
+""")
 
 st.markdown("---")
 st.caption("Dibuat untuk simulasi EOQ dalam sistem manajemen persediaan.")
