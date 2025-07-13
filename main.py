@@ -52,22 +52,28 @@ holding_cost = (order_qty_range / 2) * H
 ordering_cost = (D / order_qty_range) * S
 total_cost = holding_cost + ordering_cost
 
-fig, ax = plt.subplots(figsize=(8, 4))
+fig, ax = plt.subplots(figsize=(10, 5))
+
+# Plot Total Cost
 ax.plot(order_qty_range, total_cost, label='Total Biaya', color='blue')
+ax.scatter(order_qty_range, total_cost, color='blue', s=10)
+
+# Plot Holding Cost
 ax.plot(order_qty_range, holding_cost, '--', label='Biaya Penyimpanan', color='green')
+ax.scatter(order_qty_range, holding_cost, color='green', s=10)
+
+# Plot Ordering Cost
 ax.plot(order_qty_range, ordering_cost, '--', label='Biaya Pemesanan', color='red')
+ax.scatter(order_qty_range, ordering_cost, color='red', s=10)
+
+# Garis EOQ
 ax.axvline(EOQ, color='orange', linestyle=':', label=f'EOQ ≈ {EOQ:.0f}')
+
+# Label dan grid
 ax.set_xlabel('Jumlah Order per Kali Pesan (unit)')
 ax.set_ylabel('Biaya (Rp)')
 ax.set_title('Analisis Biaya Persediaan terhadap Kuantitas Order')
 ax.legend()
-ax.grid(True)
+ax.grid(True, linestyle='--', alpha=0.7)
 
 st.pyplot(fig)
-
-# Interpretasi hasil
-st.subheader("Interpretasi")
-st.markdown(f"Dengan EOQ sebesar **{EOQ:.2f} unit**, perusahaan sebaiknya memesan barang sebanyak itu setiap kali pemesanan dilakukan untuk meminimalkan biaya total persediaan. Dalam satu tahun, diperkirakan akan ada sekitar **{jumlah_order_per_tahun:.2f} kali pemesanan**.")
-
-st.markdown("---")
-st.caption("Dibuat untuk simulasi EOQ dalam sistem manajemen persediaan.")
